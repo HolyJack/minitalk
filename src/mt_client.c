@@ -43,7 +43,6 @@ void	sig_process(int signal, siginfo_t *info, void *context)
 void	sig_exit(int signal)
 {
 	(void) signal;
-	ft_printf("Transition is over!\n");
 	exit(0);
 }
 
