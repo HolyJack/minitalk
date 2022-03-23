@@ -6,7 +6,7 @@
 /*   By: ejafer <ejafer@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/21 16:54:54 by ejafer            #+#    #+#             */
-/*   Updated: 2022/02/03 17:10:51 by ejafer           ###   ########.fr       */
+/*   Updated: 2022/03/23 13:09:01 by ejafer           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 # include <signal.h>
 # include <stdio.h>
 # include <unistd.h>
+# include <stdlib.h>
 
 typedef struct s_data
 {
@@ -25,12 +26,18 @@ typedef struct s_data
 	int		c;
 	int		s_index;
 	int		bits;
-} t_data;
+	int		pid;
+}	t_data;
 
-t_data g_data;
+typedef struct s_cdata
+{
+	char	*str;
+	int		i;
+	int		pid;
+}	t_cdata;
 
-int	ft_atoi(const char *s);
-int ft_putstr(char *str);
-int ft_putnbr(int n);
+int		ft_atoi(const char *s);
+int		ft_putstr(char *str);
+void	ft_putnbr(int n);
 
 #endif
