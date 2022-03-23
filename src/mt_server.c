@@ -6,66 +6,73 @@
 /*   By: ejafer <ejafer@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/21 13:35:18 by ejafer            #+#    #+#             */
-/*   Updated: 2022/03/23 13:07:41 by ejafer           ###   ########.fr       */
+/*   Updated: 2022/03/23 17:08:53 by ejafer           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minitalk.h"
 
-t_data	g_data;
+t_sdata	g_sdata;
 
 void	mt_initdata(void)
 {
-	g_data.c = 0;
-	g_data.str[0] = 0;
-	g_data.s_index = 0;
-	g_data.bits = 0;
-	g_data.pid = -1;
+	g_sdata.c = 0;
+	g_sdata.str = malloc(sizeof(char) * 1);
+	g_sdata.str[0] = 0;
+	g_sdata.bits = 0;
+	g_sdata.pid = -1;
 }
 
-void	active_transition(int signal)
+int	active_transition(int signal)
 {
+	char	*tmp;
+
 	if (signal == SIGUSR1)
-			g_data.c = g_data.c << 1 | 0b1;
+			g_sdata.c = g_sdata.c << 1 | 0b1;
 	if (signal == SIGUSR2)
-			g_data.c = g_data.c << 1 | 0b0;
-	if (!--g_data.bits)
+			g_sdata.c = g_sdata.c << 1 | 0b0;
+	if (!--g_sdata.bits)
 	{
-		g_data.str[g_data.s_index] = g_data.c;
-		g_data.c = 0b0;
-		g_data.s_index++;
-		g_data.str[g_data.s_index] = 0;
+		tmp = ft_strjoin(g_sdata.str, " ");
+		tmp[ft_strlen(g_sdata.str)] = g_sdata.c;
+		free(g_sdata.str);
+		g_sdata.str = tmp;
+		g_sdata.c = 0b0;
 	}
-	kill(g_data.pid, SIGUSR1);
+	return (SIGUSR1);
 }
 
-void	change_transition_status(int signal)
+int	change_transition_status(int signal)
 {
+	char	*tmp;
+
 	if (signal == SIGUSR1)
-	{
-		g_data.bits = 8;
-		kill(g_data.pid, SIGUSR1);
-	}
+		g_sdata.bits = 8;
 	else if (signal == SIGUSR2)
 	{
-		ft_putstr(g_data.str);
-		ft_putstr("\n");
-		kill(g_data.pid, SIGUSR2);
+		tmp = g_sdata.str;
+		ft_printf("%s\n", g_sdata.str);
 		mt_initdata();
+		free(tmp);
 	}
+	return (signal);
 }
 
 void	mt_sighandler(int signal, siginfo_t *info, void *context)
 {
+	int	ans;
+
 	(void) context;
-	if (g_data.pid == -1 && signal == SIGUSR1)
-		g_data.pid = info->si_pid;
-	if (info->si_pid != g_data.pid)
-		return ;
-	if (g_data.bits)
-		active_transition(signal);
+	ans = SIGUSR2;
+	if (g_sdata.pid == -1 && signal == SIGUSR1)
+		g_sdata.pid = info->si_pid;
+	if (info->si_pid != g_sdata.pid)
+		ans = SIGUSR2;
+	else if (g_sdata.bits)
+		ans = active_transition(signal);
 	else
-		change_transition_status(signal);
+		ans = change_transition_status(signal);
+	kill(info->si_pid, ans);
 }
 
 int	main(void)
@@ -76,8 +83,7 @@ int	main(void)
 	act.sa_flags = SA_SIGINFO;
 	act.sa_sigaction = &mt_sighandler;
 	mt_initdata();
-	ft_putnbr(pid);
-	ft_putstr("\n");
+	ft_printf("%d\n", pid);
 	sigaction(SIGUSR1, &act, NULL);
 	sigaction(SIGUSR2, &act, NULL);
 	while (1)
